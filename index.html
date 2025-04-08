@@ -1,0 +1,91 @@
+<details> <summary><!DOCTYPE html>
+<html>
+<head>
+  <title>Secure Payment</title>
+  <script type="text/javascript" src="https://js.authorize.net/v1/Accept.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 500px; margin: 50px auto; }
+    input, button { width: 100%; padding: 10px; margin: 5px 0; }
+    button { background: #007bff; color: white; border: none; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Secure Payment</h2>
+  <form id="paymentForm" onsubmit="handlePayment(event)">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="amount" placeholder="Amount (e.g. 20.00)" required>
+
+    <h3>Billing Address</h3>
+    <input type="text" id="address" placeholder="Address" required>
+    <input type="text" id="city" placeholder="City" required>
+    <input type="text" id="state" placeholder="State" required>
+    <input type="text" id="zip" placeholder="ZIP" required>
+    <input type="text" id="country" placeholder="Country" required>
+
+    <h3>Card Info</h3>
+    <input type="text" id="cardNumber" placeholder="Card Number" required>
+    <input type="text" id="expMonth" placeholder="Exp MM" required>
+    <input type="text" id="expYear" placeholder="Exp YYYY" required>
+    <input type="text" id="cvv" placeholder="CVV" required>
+
+    <button type="submit">Pay Now</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const clientKey = "YOUR_SANDBOX_CLIENT_KEY"; // Replace this
+    const apiLoginID = "YOUR_SANDBOX_LOGIN_ID"; // Replace this
+    const appsScriptURL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // Replace this
+
+    function handlePayment(event) {
+      event.preventDefault();
+
+      const cardData = {
+        cardNumber: document.getElementById("cardNumber").value,
+        month: document.getElementById("expMonth").value,
+        year: document.getElementById("expYear").value,
+        cardCode: document.getElementById("cvv").value
+      };
+
+      const authData = { clientKey, apiLoginID };
+
+      Accept.dispatchData({ authData, cardData }, function(response) {
+        if (response.messages.resultCode === "Error") {
+          document.getElementById("result").innerText = response.messages.message[0].text;
+          return;
+        }
+
+        const opaqueData = response.opaqueData;
+        const payload = {
+          opaqueData,
+          name: document.getElementById("name").value,
+          email: document.getElementById("email").value,
+          amount: document.getElementById("amount").value,
+          address: document.getElementById("address").value,
+          city: document.getElementById("city").value,
+          state: document.getElementById("state").value,
+          zip: document.getElementById("zip").value,
+          country: document.getElementById("country").value
+        };
+
+        fetch(appsScriptURL, {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" }
+        })
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById("result").innerText = "Response:\n" + data;
+        })
+        .catch(err => {
+          document.getElementById("result").innerText = "Error: " + err;
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+</summary></details>
